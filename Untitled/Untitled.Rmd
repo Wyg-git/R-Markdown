@@ -1,0 +1,152 @@
+---
+title: "Frequentist-Bayesian-Fisherian Inference"
+subtitle: "Homework"
+author: "Yage Wu"
+date: "`r Sys.Date()`"
+output:
+  xaringan::moon_reader:
+    css: [default, zh-CN.css]
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+class: inverse, center, middle
+
+# Frequentist Inference
+
+---
+
+# Example:[gfr](https://web.stanford.edu/~hastie/CASI_files/DATA/gfr.txt)
+
+--
+
+```{r comment='#', echo = FALSE}
+# 均值
+G <- read.table('https://web.stanford.edu/~hastie/CASI_files/DATA/gfr.txt', header = FALSE, col.names = 'gfr')
+xbar <- mean(G$gfr)
+```
+
+- $\bar{x}=`r round(xbar,2)`$
+
+--
+
+```{r comment='#', echo=FALSE}
+# 标准误
+library(plotrix)
+se <- std.error(G$gfr)
+```
+
+- $\hat{se}=`r round(se,2)`$
+
+--
+
+- $`r round(xbar,2)`\pm`r round(se,2)`$ (standard interval)
+
+--
+
+.pull-left[
+```{r comment='#',fig.height=3.8, fig.width = 3.5,echo = FALSE}
+## 直方图
+library(ggplot2)
+ggplot(G, aes(x = gfr)) + 
+  geom_histogram(binwidth = 3, fill = "#3399ff") +
+  coord_cartesian(xlim=c(15,110))
+```
+]
+--
+
+.pull-left[
+```{r comment='#',fig.height=3.5, fig.width = 3.5, echo = FALSE}
+## 箱线图
+ggplot(G,aes(y = gfr)) + 
+  stat_boxplot(geom = "errorbar",width=0.15,size = 1) +
+  geom_boxplot(size = 1, fill = '#3399ff',outlier.fill="black", 
+               outlier.size = 3) +
+  scale_x_continuous(limits=c(-0.6, 0.6), breaks=NULL)
+```
+]
+
+
+---
+
+# Two-Sample t-Test:[Prostate](https://web.stanford.edu/~hastie/CASI_files/DATA/prostmat.csv)
+
+--
+
+```{r comment='#',fig.height=6, fig.width = 8,fig.align='center',echo = FALSE}
+## 箱线图
+prostate <- read.csv('https://web.stanford.edu/~hastie/CASI_files/DATA/prostmat.csv',header = FALSE)
+prostate <- t(prostate)
+colnames(prostate) <- c('group',paste0('gene',seq_len(6033)))
+rownames(prostate) <- seq_len(102)
+prostate <- as.data.frame(prostate)
+pro1 <- prostate[,c(1,4)]
+pro1$gene <- paste0('gene',3)
+pro1$activity <- pro1$gene3
+pro1 <- pro1[,-2]
+pro2 <- prostate[,c(1,611)]
+pro2$gene <- paste0('gene',610)
+pro2$activity <- pro2$gene610
+pro2 <- pro2[,-2]
+pro <- rbind(pro1,pro2)
+pro$activity <- as.numeric(as.character(pro$activity))
+ggplot(pro,aes(x = gene,y = activity,fill = gene)) + 
+  geom_boxplot(size = 1,outlier.fill="black", outlier.size = 2) +
+  facet_wrap(~ group, scales="free")
+
+```
+
+
+---
+
+# Two-Sample t-Test
+--
+
+```{r comment='#',fig.height=8, fig.width = 8,fig.align='center', echo = FALSE}
+## 直方图
+prostate <- read.csv('https://web.stanford.edu/~hastie/CASI_files/DATA/prostmat.csv',header = TRUE, stringsAsFactors = FALSE)
+control <- prostate[,1:50]
+cancer <- prostate[,51:102]
+t_stat <- 0
+t <- 0
+for (i in 1:6033){
+  t <- t.test(cancer[i,],control[i,],paired = FALSE)
+  t_stat[i] <- as.data.frame(t$statistic)[1,1]
+}
+
+ggplot(NULL, aes(x=t_stat)) + 
+  geom_histogram(aes(y = ..density..),binwidth  = 0.21, fill = "#3399ff")+
+  ylim(0,0.4) + 
+  geom_line(stat = "density",adjust=1.5,colour="red",lwd = 1)+
+  geom_rug(sides = 'b', size = 0.01) +
+  geom_rug(aes(x=t_stat[c(3,610)]),color = "red") +
+  annotate("text", x = t_stat[c(3,610)], y = 0, 
+           label = round(t_stat[c(3,610)],3),color = 'red',lwd = 5)
+
+
+```
+
+---
+
+# Confidence Interval:[Score](https://ghwang.netlify.com/project/statistical-foundations-of-big-data/2-FBF.pdf)
+
+```{r comment='#',fig.height=8, fig.width = 8, fig.align='center', echo = FALSE}
+# 散点图
+
+score <- read.table('https://web.stanford.edu/~hastie/CASI_files/DATA/student_score.txt',header = TRUE)
+ggplot(score,aes(x = mech, y = vecs)) +
+  geom_point(lwd = 2)
+corhat <- cor(score$mech,score$vecs)
+corhat <- round(corhat,3)
+
+```
+
+--
+Sample correlation coefficient: $\hat{cor}=`r corhat`$
+---
+
+# xaringan
+
